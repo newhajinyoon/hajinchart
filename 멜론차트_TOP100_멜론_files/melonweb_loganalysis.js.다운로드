@@ -1,0 +1,7 @@
+if (!wcs_add) var wcs_add={};
+wcs_add["wa"] = "s_f9c4bde066b";
+if (!_nasa) var _nasa={};
+if(window.wcs){
+	wcs.inflow("melon.com");
+	wcs_do(_nasa);
+}

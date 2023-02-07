@@ -1,0 +1,58 @@
+var tiara = {
+	sendLog: function (menuId) {
+		if(menuId == null || menuId == '') return;
+
+		var env = 'production';
+		if(location.host.indexOf('sandbox') > -1 || location.host.indexOf('cbt') > -1 || location.host.indexOf('rel') > -1) env = 'dev';
+
+		var section = '';
+		var page = '';
+		var thirdProvideAgree = false;
+		var thirdAdAgree = false;
+		var charged = 'N';
+		var customProps = { menuid : menuId };
+
+		tiara.getNewTiaraInfo(menuId).then(function(data){
+			section = data.section;
+			page = data.page;
+			thirdProvideAgree = data.thirdProvideAgree == 'Y' ? true : false;
+			thirdAdAgree = data.thirdAdAgree == 'Y' ? true : false;
+			charged = data.charged;
+
+			if(isMelonLogin()){
+				customProps = { menuid : menuId, charged: charged };
+			}
+
+			//뉴티아라 로그 발송
+			TiaraTracker.getInstance()
+				.setSvcDomain('www.melon.com')
+				.setPage(page)
+				.setSection(section)
+				.setDeployment(env)
+				.trackPage('페이지이동')
+				.setThirdProvideAgree(thirdProvideAgree)
+				.setThirdAdAgree(thirdAdAgree)
+				.customProps(customProps)
+				.track();
+		});
+	},
+	getNewTiaraInfo: function (menuId) {
+		return new Promise(function(resolve, reject){
+			$.ajax({
+				type: 'GET',
+				dataType: 'json',
+				data: {
+					menuId : menuId
+				},
+				url: '/newtiara/info.json',
+				success:function(data){
+					resolve(data);
+				}
+			});
+		});
+	}
+};
+
+
+
+

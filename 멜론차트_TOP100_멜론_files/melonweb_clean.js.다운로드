@@ -1,0 +1,166 @@
+
+(function() {
+	MELON.WEBSVC.CLEAN = {
+		isBlacklist : function(contsTypeCode){
+			var isBlack = false;
+			// 클린플랫폼 블랙리스트
+			$.ajax({
+				dataType: "json",
+				url: '/clean/isblack.json',
+				data: {
+					contsTypeCode : contsTypeCode
+				},
+				async : false,
+				success : function(result){
+					if(result.isBlacklist == true){
+						if(window.innerWidth < 600 || window.innerHeight < 800){
+							window.resizeTo(600, 800);
+						}
+						$("#restrict_frame").attr('src', result.redirectUrl);
+						$("#restrict_popup").modal("open");
+						// if(serviceCode == 'MUSIC_MESSAGE'){
+						// 	alert("음악메시지 사용이 제한되었습니다. 자세한 내용은 고객센터로 문의 바랍니다.");
+						// }else if(serviceCode == 'DJPLAYLIST'){
+						// 	alert("DJ플레이리스트 사용이 제한되었습니다. 자세한 내용은 고객센터로 문의 바랍니다.");
+						// }else if(serviceCode == 'PLAYLIST'){
+						// 	alert("플레이리스트 사용이 제한되었습니다. 자세한 내용은 고객센터로 문의 바랍니다.");
+						// }else if(serviceCode == 'PROFILE'){
+						// 	alert("프로필 사용이 제한되었습니다. 자세한 내용은 고객센터로 문의 바랍니다.");
+						// }else {
+						// 	alert("사용이 제한되었습니다. 자세한 내용은 고객센터로 문의 바랍니다.");
+						// }
+						isBlack = true;
+					}
+				},
+				error : function(xhr, status, error) {
+					isBlack = false;
+				}
+			});
+			return isBlack;
+		},
+		isBlind : function(contsTypeCode, contentId){
+			var isBlind = false;
+			// 클린플랫폼 블랙리스트
+			$.ajax({
+				dataType: "json",
+				url: '/clean/isblind.json',
+				data: {
+					contsTypeCode : contsTypeCode,
+					contentId: contentId
+				},
+				async : false,
+				success : function(result){
+					if(result.isBlind == true){
+						alert(result.resultMsg);
+						// $("#restrict_frame").attr('src', result.redirectUrl);
+						// $("#restrict_popup").modal("open");
+						// if(serviceCode == 'MUSIC_MESSAGE'){
+						// 	alert("음악메시지 사용이 제한되었습니다. 자세한 내용은 고객센터로 문의 바랍니다.");
+						// }else if(serviceCode == 'DJPLAYLIST'){
+						// 	alert("DJ플레이리스트 사용이 제한되었습니다. 자세한 내용은 고객센터로 문의 바랍니다.");
+						// }else if(serviceCode == 'PLAYLIST'){
+						// 	alert("플레이리스트 사용이 제한되었습니다. 자세한 내용은 고객센터로 문의 바랍니다.");
+						// }else if(serviceCode == 'PROFILE'){
+						// 	alert("프로필 사용이 제한되었습니다. 자세한 내용은 고객센터로 문의 바랍니다.");
+						// }else {
+						// 	alert("사용이 제한되었습니다. 자세한 내용은 고객센터로 문의 바랍니다.");
+						// }
+						isBlind = true;
+					}
+				},
+				error : function(xhr, status, error) {
+					isBlind = false;
+				}
+			});
+			return isBlind;
+		},
+		showReportModal : function(contsTypeCode, contentId) {
+			if(!MELON.WEBSVC.POC.login.isMelonLogin()){
+				MELON.WEBSVC.POC.login.loginPopupLayerd('');
+				return;
+			}
+			if(contsTypeCode == 'MUSIC_MESSAGE'){
+				$("#headdesc").show();
+				$("#illegalli").hide();
+				$("#rightli").hide();
+			}
+			$('#contsTypeCode').val(contsTypeCode);
+			$('#contentId').val(contentId);
+			$('input[name=reasonCode]').attr('checked', false);
+			$(".clean_popup.layer_popup .text-area-wrap .count").text("0 / 80자");
+			$('#reasonMention').attr('readonly', 'readonly').attr('placeholder','기타 항목 선택 후 입력해 주세요.').prop('disabled', true).val('');
+			$('#reasonMention').val("");
+			$('#reasonMention').attr("disabled", true);
+			$(".item.d_input_check").removeClass('on');
+			$(".item.d_input_check").removeClass('on');
+			$('#report_popup').modal('open');
+		},
+		submitReport : function() {
+			var url = '/clean/report.json';
+			if($('li.item.d_input_check.on input[name=reasonCode]').val() === undefined){
+				alert("신고사유를 선택해주세요.");
+				return;
+			}
+			if($('li.item.d_input_check.on input[name=reasonCode]').val() == 'G' && $('textarea[name=reasonMention]').val() == ''){
+				alert("신고사유를 입력해주세요.");
+				return;
+			}
+			if($('li.item.d_input_check.on input[name=reasonCode]').val() == 'R'){
+				url = '/clean/report/right.json';
+			}
+			// 불법 촬영물 신고하기
+			if($('li.item.d_input_check.on input[name=reasonCode]').val() == 'I'){
+				$.ajax({
+					url: "/clean/report/illegal.json",
+					dataType: "json",
+					type : "POST",
+					async : false,
+					data : {
+						contsTypeCode : $('#contsTypeCode').val(),
+						contentId : $('#contentId').val()
+					},
+					error: function(request, status, error) {
+						alert("해당 페이지의 접속이 지연되고 있습니다. 잠시 후 다시 이용해 주세요.");
+					},
+					success: function(response){
+						if(response.code === "0" && response.data.url == ""){
+							alert("신고 내용이 접수되었습니다.");
+							$('#report_popup').modal('close');
+						}else if(response.code === "0"){
+							window.open(response.data.url);
+							$('#report_popup').modal('close');
+						}else{
+							alert("해당 페이지의 접속이 지연되고 있습니다. 잠시 후 다시 이용해 주세요.");
+						}
+					}
+				});
+				return;
+			}
+
+			$.ajax({
+				url: url,
+				data: {
+					contsTypeCode : $('#contsTypeCode').val(),
+					contentId : $('#contentId').val(),
+					reasonCode : $('li.item.d_input_check.on input[name=reasonCode]').val(),
+					reasonMention : $('textarea[name=reasonMention]').val(),
+				},
+				async : false,
+				success : function(result){
+					if(result.code == "0"){
+						alert("신고 내용이 접수되었습니다.");
+						$('#report_popup').modal('close');
+					}else if(result.code == "4"){
+						alert("[회원정보없음]"+"오류가 발생했습니다. 관리자에게 문의해주세요.");
+					}else{
+						alert("["+result.code+"]"+"오류가 발생했습니다. 관리자에게 문의해주세요.");
+					}
+				},error : function(xhr, status, error) {
+					console.log(error);
+					alert("해당 페이지의 접속이 지연되고 있습니다. 잠시 후 다시 이용해 주세요.");
+					return;
+				}
+			});
+		},
+	}
+})();
